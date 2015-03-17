@@ -23,8 +23,66 @@ def addConnection(a,b):
 def meanSquareError(target, actual):
     dif = map(sub, actual, target)
     difpow = map(power, dif)
-    error = (1.0/(2.0 * len(target))) * sum(dif)
-    return error 
+    error = (1.0/(2.0 * len(target))) * sum(difpow)
+    return error
+
+def estPartials(eT):
+    epsilon = 0.00000001
+
+    llen = len(layers) - 1
+    wlen = len(inputLayer.getWeights([]))
+
+    ws = [[] for i in range(llen)]
+
+    for i in range(llen):
+        ws[i] = layers[i].getLayerWeights()
+
+    wValues = []
+    for l in ws:
+        for w in l:
+            wValues.append(w[2])
+
+    retarray = [0.0] * wlen
+
+    for i in range(wlen):
+        ei = np.array([0.0] * wlen)
+        ei[i] = 1.0
+
+        print wValues
+        print epsilon
+        print ei
+
+        Eeps = wValues + epsilon * ei
+
+        altWeights = [[] for r in range(llen)]
+
+        a = 0
+
+        print ws
+        for l in range(llen):
+            for w in ws[l]:
+                altWeights[l].append((w[0],w[1],Eeps[a],0))
+                a += 1
+
+        for l in range(len(ws)):
+            print inputLayer.getWeights([])[l][2]
+
+        for k in range(len(test)):
+            (input, targetOut) = test[k]
+            inputLayer.setWeights(altWeights)
+            inputLayer.calculate()
+            output = outputLayer.getNeurons()[0].getValue()
+
+            tmptarget = targetOut
+            tmpresult = output
+
+        altMSE = meanSquareError([tmptarget], [tmpresult])
+        retarray[i] = (altMSE - eT)
+
+
+
+    return retarray
+
 
 def linearError(target, actual):
     dif = map(sub, actual, target)
@@ -51,7 +109,7 @@ def createNetwork(learnConst, momentum):
     say("----------------------------------------------------------")
     layers.append(la.Layer("Int Layer", learnConst, momentum))
     layers.append(la.Layer("Hid Layer1", learnConst, momentum))
-    # layers.append(la.Layer("Hid Layer2", learnConst, momentum))
+# layers.append(la.Layer("Hid Layer2", learnConst, momentum))
     layers.append(la.Layer("Out Layer", learnConst, momentum))
     layers[2].isOutput()
     say("----------------------------------------------------------")
@@ -62,14 +120,6 @@ def createNetwork(learnConst, momentum):
     layers[0].addNeuron(ne.Neuron(linear, "Inp neuron", False))
     for i in range(2):
         layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron" + str(i), False))
-    # layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron11", False))
-    # layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron12", False))
-    # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron21", False))
-    # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron22", False))
-    # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron23", False))
-    # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron24", False))
-    # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron25", False))
-    # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron26", False))
     layers[2].addNeuron(ne.Neuron(linear, "Out neuron", False))
     say("----------------------------------------------------------")
     say("Done adding! \n")
@@ -78,7 +128,7 @@ def createNetwork(learnConst, momentum):
     say("----------------------------------------------------------")
     addConnection(layers[0], layers[1])
     addConnection(layers[1], layers[2])
-    # addConnection(layers[2], layers[3])
+# addConnection(layers[2], layers[3])
     say("----------------------------------------------------------")
     say("Done building! \n")
     return (layers[0], layers[2])
@@ -86,7 +136,10 @@ def createNetwork(learnConst, momentum):
 def broadcast(value, inputNeuron, outputNeuron):
     say("Broadcasting " + str(value))
     inputNeuron.broadcast(value)
-    return outputNeuron.getValue() 
+    return outputNeuron.getValue()
+
+
+
 
 def sinc(x):
    return np.sinc(x) 
@@ -129,16 +182,16 @@ for j in range(loops):
     results = []
     targets = []
 
-    # Training 
-    for i in range(len(training)):
+# Training
+for i in range(len(training)):
 
-        (input, targetOut) = training[i]
-        inputLayer.getNeurons()[1].setValue(input) 
-        inputLayer.calculate()
-        output = outputLayer.getNeurons()[0].getValue()
+    (input, targetOut) = training[i]
+    inputLayer.getNeurons()[1].setValue(input)
+    inputLayer.calculate()
+    output = outputLayer.getNeurons()[0].getValue()
 
-        targets.append(targetOut)
-        results.append(output)
+    targets.append(targetOut)
+    results.append(output)
 
     errorT = meanSquareError(targets, results)
     errorsT.append(abs(errorT))
@@ -179,6 +232,8 @@ plt.plot(np.array(plotIn), np.array(results), "r-", label = "Calculated")
 plt.plot(np.array(plotIn), np.array(targets), "b-", label = "Target")
 plt.legend()
 plt.show()
+
+print estPartials(errorTest)
 
 plt.plot(np.array(errorsT), "b-", label = "Training set")
 plt.plot(np.array(errorsTest), "r-", label = "Test set")
