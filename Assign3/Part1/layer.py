@@ -45,10 +45,10 @@ class Layer:
         for sender in self.neurons:
             for reciever in layer.getNeurons():
                 if not reciever.isBias:
-                    self.weights.append((sender, reciever, random.uniform(0,1), 0))
+                    # self.weights.append((sender, reciever, random.uniform(0,1), 0))
+                    self.weights.append((sender, reciever, 1, 0))
                     sender.addSendTo(reciever)
                     reciever.addRecieveFrom(sender)
-                # self.weights.append((sender, reciever, 1, 0))
 
     def isOutput(self):
         self.say("Am output, removing bias")
@@ -67,14 +67,16 @@ class Layer:
                     # Finds the weight between the 2 layers
                     weight = self.findWeight(neuronThis, neuronNext)
                     accError += neuronNext.getError() * weight 
+                # self.say("The accumulated error for " + neuronThis.getName() + " is " + str(accError))
                 newError = self.derivativeOfLinearFunc(neuronThis.getValue()) * accError
                 neuronThis.setError(newError)
 
-                for i in range(len(self.weights)):
-                    sender, reciever, weight, momentum = self.weights[i]
-                    newMomentum = weight + newError * reciever.getValue()
-                    newWeight = newMomentum + self.mom * momentum
-                    self.weights[i] = (sender, reciever, newWeight, newMomentum)
+            for i in range(len(self.weights)):
+                sender, reciever, weight, momentum = self.weights[i]
+                newMomentum = self.learnConst * newError * sender.getValue()
+                newWeight = weight + newMomentum + self.mom * momentum
+                self.say("Updating " + sender.getName() + "'s weight from " + str(weight) + " to " + str(newWeight))
+                self.weights[i] = (sender, reciever, newWeight, newMomentum)
 
         # only used in the output layer. Ensures the last layer does not find
         # an error nor calculate weights after it as it is given.
@@ -99,7 +101,7 @@ class Layer:
         return 0
 
     def derivativeOfLinearFunc(self, x):
-        return 1/((1 + abs(x)) ** 2)
+        return 1.0/((1.0 + abs(x)) ** 2.0)
 
 # Forward propogation
 
