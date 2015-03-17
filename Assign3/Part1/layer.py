@@ -1,12 +1,12 @@
 import random
 import math
+import neuron as ne
 
 class Layer:
     talk = False
     name = "unnamed"
     neurons = None
 
-    # weights is a tuple of 4 elements, sender neuron, reciever neuron, weigh and last error
     weights = None
     nextLayer = None
     prevLayer = None
@@ -14,107 +14,22 @@ class Layer:
     learnConst = None
     mom = None
 
+
+# Creation
+
+    def linear(self, x):
+        return x
+
     def __init__(self, name, learnConst, momentum):
         self.mom = momentum
         self.learnConst = learnConst
         self.weights = []
         self.name = name
         self.neurons = []
+        bias = ne.Neuron(self.linear, name + "bias", True)
+        bias.setValue(1)
+        self.neurons.append(bias)
         self.say("Hello World!")
-
-    def sendToLayer(self, layer):
-        self.nextLayer = layer
-        layer.prevLayer = self
-        self.say("sending to " + layer.getName())
-        for reciever in layer.getNeurons():
-            for sender in self.neurons:
-                self.weights.append((sender, reciever, random.uniform(0,1), 0))
-                # self.weights.append((sender, reciever, 1, 0))
-                reciever.addRecieveFrom(sender)
-                sender.addSendTo(reciever)
-
-    def getErrors(self):
-        errors = []
-        for neuron in self.neurons:
-            errors.append((neuron, neuron.getError()))
-        return errors 
-
-    def backpropogate(self, errors):
-        # self.say("Im doing backpropogation. Next layer is " + str(self.nextLayer) + ". Prev layer is " + str(self.prevLayer))
-        if self.nextLayer is not None:
-            # self.say("I found a nextLayer: " + self.nextLayer.getName())
-            errors = self.nextLayer.getErrors()
-            for neuronThis in self.neurons:
-                newError = 0
-                for (neuronNext, error) in errors:
-                    weight = self.findWeight(neuronThis, neuronNext)
-                    # self.say("error of " + str(error * weight) + "to neuron " + str(neuronThis.getName())) 
-                    newError += error * weight 
-                neuronThis.setError(newError)
-        # only used in the output layer
-        else:
-            for i in range(len(self.neurons)):
-                self.neurons[i].setError(errors[i])
-        if self.prevLayer is not None:
-            self.prevLayer.backpropogate(0)
-        # The only layer with no previous layer is the input layer, 
-        # so when this is reached we have updated all errors and can
-        # start updating weights
-        else:
-            self.newLine()
-            self.say("Found all errors. Calculating new weights")
-            self.calculateNewWeights()
-            # self.say("i should be input")
-
-    def getWeights(self, retWeights):
-        for _, _, weight, _ in self.weights:
-           retWeights.append(weight)
-        if self.nextLayer is not None:
-            return self.nextLayer.getWeights(retWeights)
-        else:
-            return retWeights
-
-    def calculateNewWeights(self):
-        self.newLine()
-        self.say("Calculating new weights")
-        for i in range(len(self.weights)):
-            sender, reciever, weight, momentum = self.weights[i]
-            # print reciever.getError()
-            # print momentum
-            newWeight = self.learnConst * reciever.getError() * self.derivativeOfLinearFunc(reciever.getValue()) * sender.getValue() + momentum * self.mom# * reciever.getValue()
-            newMomentum = newWeight - weight
-            # print "changed weight with " + str(delta)
-            # newWeight = delta #weight + delta
-            self.say("Calculated new weigh between " + sender.getName() + " and " + reciever.getName() + ". Old was " + str(weight) + ". New is " + str(newWeight))
-            # print ("Calculated new weigh between " + sender.getName() + " and " + reciever.getName() + ". Old was " + str(weight) + ". New is " + str(newWeight))
-            self.weights[i] = (sender, reciever, newWeight, newMomentum)
-        if self.nextLayer is not None:
-            self.nextLayer.calculateNewWeights()
-        else:
-            self.say("Im output layer, ready for new run")
-
-    def derivativeOfLinearFunc(self, x):
-        return 1/(math.pow((1 + abs(x)),2))
-
-    def findWeight(self, sender1, reciever1):
-        for (sender2, reciever2, weight, _) in self.weights:
-            if sender2 == sender1 and reciever1 == reciever2:
-                return weight
-        return 0
-
-    def calculate(self):
-        self.newLine()
-        self.say("Asking my layer to calculate and send")
-        for neuron in self.neurons:
-            neuron.calculateAndSend()
-
-        if self.nextLayer is not None:
-            self.newLine()
-            self.say("Sending weights to next layer")
-            for (sender, reciever, weigh, _) in self.weights: 
-                reciever.recieveWeigh(sender, weigh)     
-            self.nextLayer.calculate()
-        
 
     def addNeuron(self, neuron):
         self.say("got something named \"" + neuron.getName() + "\"")
@@ -123,8 +38,104 @@ class Layer:
     def getNeurons(self):
         return self.neurons
 
+    def sendToLayer(self, layer):
+        self.nextLayer = layer
+        layer.prevLayer = self
+        self.say("sending to " + layer.getName())
+        for sender in self.neurons:
+            for reciever in layer.getNeurons():
+                if not reciever.isBias:
+                    self.weights.append((sender, reciever, random.uniform(0,1), 0))
+                    sender.addSendTo(reciever)
+                    reciever.addRecieveFrom(sender)
+                # self.weights.append((sender, reciever, 1, 0))
+
+    def isOutput(self):
+        self.say("Am output, removing bias")
+        self.neurons = []
+
+# Backpropogation
+
+    def backpropogate(self, errors):
+        # On every layer that is not output, we calculate the error
+        if self.nextLayer is not None:
+            errors = self.nextLayer.getErrors()
+            # Calculates new error for each neuron
+            for neuronThis in self.neurons:
+                accError = 0
+                for (neuronNext, _) in errors:
+                    # Finds the weight between the 2 layers
+                    weight = self.findWeight(neuronThis, neuronNext)
+                    accError += neuronNext.getError() * weight 
+                newError = self.derivativeOfLinearFunc(neuronThis.getValue()) * accError
+                neuronThis.setError(newError)
+
+                for i in range(len(self.weights)):
+                    sender, reciever, weight, momentum = self.weights[i]
+                    newMomentum = weight + newError * reciever.getValue()
+                    newWeight = newMomentum + self.mom * momentum
+                    self.weights[i] = (sender, reciever, newWeight, newMomentum)
+
+        # only used in the output layer. Ensures the last layer does not find
+        # an error nor calculate weights after it as it is given.
+        else:
+            for i in range(len(self.neurons)):
+                self.neurons[i].setError(errors[i])
+
+        # Recursive call on all previous layers
+        if self.prevLayer is not None:
+            self.prevLayer.backpropogate(0)
+
+    def getErrors(self):
+        errors = []
+        for neuron in self.neurons:
+            errors.append((neuron, neuron.getError()))
+        return errors 
+
+    def findWeight(self, sender1, reciever1):
+        for (sender2, reciever2, weight, _) in self.weights:
+            if sender2 == sender1 and reciever1 == reciever2:
+                return weight
+        return 0
+
+    def derivativeOfLinearFunc(self, x):
+        return 1/((1 + abs(x)) ** 2)
+
+# Forward propogation
+
+    def calculate(self):
+        self.newLine()
+        self.say("Asking my layer to calculate and send")
+        if self.prevLayer is not None:
+            for neuron in self.neurons:
+                neuron.calculateAndSend()
+        else:
+            for neuron in self.neurons:
+                neuron.sendAll()
+
+        if self.nextLayer is not None:
+            self.newLine()
+            self.say("Sending weights to next layer")
+            for (sender, reciever, weigh, _) in self.weights:
+                reciever.recieveWeigh(sender, weigh)
+            self.nextLayer.calculate()
+
+
+# Debugging 
+
     def getName(self):
         return self.name
+
+    def getWeights(self, retWeights):
+        for sender, reciever, weight, _ in self.weights:
+           retWeights.append((sender, reciever, weight, reciever.getValue()))
+        if self.nextLayer is not None:
+            return self.nextLayer.getWeights(retWeights)
+        else:
+            return retWeights
+
+    def setWeights(self, weights):
+        self.weights = weights
 
     def say(self, message):
         if self.talk:

@@ -1,6 +1,7 @@
 class Neuron:
     talk = False
     name = "unnamed"
+    isBias = False
 
     value = None
 
@@ -19,13 +20,14 @@ class Neuron:
 
     error = None
 
-    def __init__(self, func, name):
+    def __init__(self, func, name, isBias):
         self.calculation = [] 
         self.sendTo = []
         self.recieveFrom = []
         self.name = name
         self.transformFunc = func
-        self.say("Hello world!")
+        self.isBias = isBias
+        # self.say("Hello world!")
 
     def recieveWeigh(self, sender, weigh):
         self.say("got a weigh " + str(weigh) + " from " + sender.getName())
@@ -46,9 +48,10 @@ class Neuron:
                 self.say("    found weight: " + str(weigh) + " and value: " + str(sender.getValue()) + ". Calculated value: " + str(sender.getValue() * weigh))
             self.value = newValue/len(self.calculation)
             self.say("calculated value " + str(self.value))
+        self.calculation = []
 
-    def calcError(self, otherError, weight):
-        self.error = otherError * weight
+    # def calcError(self, otherError, weight):
+        # self.error = otherError * weight
         # self.say("I calculated my error to " + str(self.error))
 
     def getError(self):
@@ -59,7 +62,7 @@ class Neuron:
         self.error = error
 
     def addRecieveFrom(self, neigh):
-        self.say("got a new node named \"" + neigh.getName() + "\" listening to it!")
+        # self.say("got a new node named \"" + neigh.getName() + "\" listening to it!")
         self.recieveFrom.append((neigh, 1))
 
     def addSendTo(self, neigh):

@@ -1,19 +1,31 @@
 from time import sleep
 from sklearn.metrics import mean_squared_error
-from math import sqrt
+import math
 from parser import fromFile
 
+
+import matplotlib.pyplot as plt
 import numpy as np
 import neuron as ne
 import layer as la
 
 
 # Helper functions
+def sub(a,b):
+    return a-b
+
+def power(a):
+    return a ** 2.0
+
 def addConnection(a,b):
     a.sendToLayer(b)
 
 def meanSquareError(target, actual):
-    return ((target - actual) ** 2)#.mean(axis=ax)
+    dif = map(sub, actual, target)
+    difpow = map(power, dif)
+    error = (1.0/(2.0 * len(target))) * sum(difpow)
+    print error
+    return error 
 
 def say(message):
     if networkTalk:
@@ -21,7 +33,7 @@ def say(message):
 
 # Transfer funcions
 def nonLinear(x):
-    return x/(1 + abs(x))
+    return x/(1.0 + abs(x))
 
 def linear(x):
     return x
@@ -37,21 +49,22 @@ def createNetwork(learnConst, momentum):
     layers.append(la.Layer("Hid Layer1", learnConst, momentum))
     # layers.append(la.Layer("Hid Layer2", learnConst))
     layers.append(la.Layer("Out Layer", learnConst, momentum))
+    layers[2].isOutput()
     say("----------------------------------------------------------")
     say("Done creating layers! \n")
 
     say("Adding nodes to layers")
     say("----------------------------------------------------------")
-    layers[0].addNeuron(ne.Neuron(linear, "Inp neuron"))
-    layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron11"))
-    # layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron12"))
+    layers[0].addNeuron(ne.Neuron(linear, "Inp neuron", False))
+    layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron11", False))
+    layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron12", False))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron21"))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron22"))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron23"))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron24"))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron25"))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron26"))
-    layers[2].addNeuron(ne.Neuron(linear, "Out neuron"))
+    layers[2].addNeuron(ne.Neuron(linear, "Out neuron", False))
     say("----------------------------------------------------------")
     say("Done adding! \n")
 
@@ -69,58 +82,70 @@ def broadcast(value, inputNeuron, outputNeuron):
     inputNeuron.broadcast(value)
     return outputNeuron.getValue() 
 
+# def normalize(dif, input, output)
+
 # debugging
 layers = []
 networkTalk = False
 # networkTalk = True
 
 # Network constants
-learnConst = 0.010
-momentum = 1.0
-
+learnConst = 0.000001
+momentum = 0.00001
 
 inputLayer, outputLayer= createNetwork(learnConst, momentum)
+errors = []
 
-print "Training!"
+# print "Training!"
+
+inputVector      = []
+outputCalculated = []
+outputTarget     = []
 
 training = fromFile("sincTrain25.dt")
-for i in range(len(training)):
-    (input, targetOut) = training[i]
-    inputLayer.getNeurons()[0].setValue(input)
-    error = 0
-    j = 0
-    for j in range(10):
-    # for _ in range(1000):
+
+# Loop
+loops = 8
+for _ in range(loops):
+
+    results = []
+    targets = []
+
+    for i in range(len(training)):
+
+        (input, targetOut) = training[i]
+        inputLayer.getNeurons()[1].setValue(input) 
         inputLayer.calculate()
-        error = meanSquareError(outputLayer.getNeurons()[0].getValue(), targetOut)
-        # print "\n\n"
-        # print "Doing backpropagation!"
-        # print "Finding errors!"
-        outputLayer.backpropogate([error])
-        # print "In -> " + str(input)
-        # print "Out -> " + str(outputLayer.getNeurons()[0].getValue())# + " target was: " + str(targetOut)
-        # print "Training set " + str(i) + ". Run " + str(j) + ": Error was " + str(error)
-        j += 1
-        # sleep(1)
-    # errors.append(error)
-    # actualOut = broadcast(input, inputNeuron, outputNeuron)
-    # error = meanSquareError(targetOut, actualOut)  
+        output = outputLayer.getNeurons()[0].getValue()
 
-print "Training done!"
-print "Printing weights: "
-print inputLayer.getWeights([])
-print "Mathword mathword partial derivative numerically estimated mathword mathword"
+        targets.append(targetOut)
+        results.append(output)
+
+    error = meanSquareError(targets, results)
+    print error
+    print outputLayer.getNeurons()[0].getValue()
+    print targetOut
+    outputLayer.backpropogate([error])
+
+    # print inputLayer.getWeights([])
 
 
-print "Testing!"
 
 test = fromFile("sincValidate10.dt")
-
-errors = []
 for i in range(len(test)):
     (input, targetOut) = test[i]
+    inputLayer.getNeurons()[1].setValue(input) 
     inputLayer.calculate()
-    error = meanSquareError(outputLayer.getNeurons()[0].getValue(), targetOut)
-    errors.append(error)
+    output = outputLayer.getNeurons()[0].getValue()
 
-print "Average error is: " + str(sum(errors)/len(errors))
+    # print "Target -> " + str(targetOut)
+    # print "Predicted -> " + str(output)
+
+    inputVector.append(input)
+    outputCalculated.append(output)
+    outputTarget.append(targetOut)
+
+inputVectorSorted, outputTarget= (list(t) for t in zip(*sorted(zip(inputVector, outputTarget))))
+plt.plot(np.array(inputVector),np.array(outputCalculated), "ro")
+plt.plot(np.array(inputVectorSorted),np.array(outputTarget), "b-")
+plt.show()
