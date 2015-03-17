@@ -144,37 +144,43 @@ ans =
 
 \subsection{III.2.2}
 
-We have used matlabs inbuilt svm-training function "svmtrain" to get our
-results. It makes it possible to specify a kernel function of your liking
-and choose a $\gamma$ and a $C$ of your choosing, so we did not look
-further. 
+We used LIBSVM to train our model. It makes it possible to specify a
+kernel function of your liking and choose a $\gamma$ and a $C$ of your
+choosing, so we did not look further.
 
 We did the crossvalidation by splitting the data into 5 parts. Three of
-size 20 and two of size 19. Additionally we made a list of size 7 for 
-possible $\gamma$'s and the same for C. Then we trained a model for each
-combination and chose the one with the lowest 0-1 loss and used the found
-values to train the new model. 
+size 20 and two of size 19. Additionally we for both the raw and the
+normalised data made a list of size 7 for possible $\gamma$'s and the
+same for C. We it for both since the two datasets are of very different
+sizes. Then we trained a model for each combination and chose the one
+with the lowest 0-1 loss and used the found values to train the new model.
 
-On the unnormalized data we observed a 0-1 loss of 18 \% on the trainingdata
-and 22 \% on the testdata. The best C on the unnormalized data is 0.01 and
-the best $\gamma$  is 0.0000001. 
+On the unnormalized data we observed a 0-1 loss of 18.56 \% on the trainingdata
+and 21.43 \% on the testdata. OUr gridsearch resulted in a C of 100 and
+a $\gamma$  of $2^{-20}$. 
 
-On the normalized data the 0-1 loss on the trainingdata was 0 \% and 9 \%
-on the testdata. The best C was 10 or 100 and the best $\gamma$ was 0.1.
+On the normalized data the 0-1 loss on the trainingdata was 10.20 \%
+and 13.40 \% on the testdata. The best C was 100 and the best
+$\gamma$ was $2^{-10}$.
 
-Without normalization some features weigh much more than others.
-Particularly the first three columns are quite a bit higher than the other
-columns. 
+Without normalization some features weigh much more than others and the
+model ends up practically ignoring the rest of the colums. Particularly
+the first three columns are quite a bit higher than the other columns.
 
 \subsection{III.2.3}
 For the following section we will use the normalized data.
 
 \subsubsection{III.2.3.1}
-In our model there are 54 free support vectors and 0 bounded. 
+In our model there are 31 bounded support vectors and 10 free support
+vectors. 
 
-Decreasing C increase the number of support vectors. This gives more
-precision, but having a support vector for every point of data can give
-computational overhead with a larger dataset.
+Decreasing C increases the number of support vectors and all of
+them will eventually become bounded vectors. This could result in
+underfitting and will increase the number of training errors.
+
+Drastically increasing C will lower the amount of support vectors which
+will cause the model to overfit and outliers will distort the hyperplane
+to a greater degree.
 
 
 \subsection{III.2.3.2}
