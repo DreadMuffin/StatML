@@ -42,12 +42,39 @@ Students: & Lasse Ahlbech Madsen \\
 \newpage
 \end{titlepage}
 
-\section{III.1}
+\section{III.1. Neural network implementation}
 
 \subsection{Deriviation of the derivative of the transfer function}
 \input{Part1/proof.tex}
-\subsection{}
+\newpage
 
+\subsection{Implementation}
+As I foolishly chose to implement the network in python from scrach, we have no finished a working implementation. We are however close and are at a point where we do not know where the error is. Here follows exacly what (we think) the network does.\\
+We hope this implementation shows we have a grasp of at least the basics of the neural network so we can use an already implemented version of it, if we are to resubmit.
+
+\subsubsection{Feed-Forward}
+We implemented the feed-forward in layers, with each layer containing $N$ neurons $n_i$ and $N \cdot M$ weights $w_{ij}$, where $M$ is the number of the following layers neurons.\\
+To calculate the value of a neuron $z_i$ we used the following:
+\begin{equation}
+    z_i = \sum_{j=1}^{M} w_{ij} \cdot x_{j} + w_0
+\end{equation}
+with $w_0$ being the bias neuron and $x_j$ being the vaue of neuron $m_j$.\\
+For the output and input layers we used a linear transformation function, where the hidden layers values was transformed using (\ref{eq:transformation}).
+This calculation is done through the network, and it seams to work.
+
+\subsubsection{Error calculation}
+The error calculations are done using the formular, where $K$ is the outputs:
+\begin{equation}
+    \frac{1}{2} \sum_{j = 1}^{N}\sum_{i = 1}^{K}([t_j]_i - [f(x_j;w)]_i)
+\end{equation}
+This diviates from the given formular:
+\begin{equation}
+    \frac{1}{2} \sum_{j = 1}^{N} \sum_{i = 1}^{K}([f(x_j;w)]_i - [t_j]_i)^2
+\end{equation}
+But we were unable to get any reasonable results from this, which i belive is the fault of some implementation somewhere in the code.\\
+
+
+\subsection{Results}
 
 \begin{figure}
     \centering
