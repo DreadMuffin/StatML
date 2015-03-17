@@ -50,7 +50,7 @@ Students: & Lasse Ahlbech Madsen \\
 
 \subsection{Implementation}
 As I foolishly chose to implement the network in python from scrach, we have no finished a working implementation. We are however close and are at a point where we do not know where the error is. Here follows exacly what (we think) the network does.\\
-We hope this implementation shows we have a grasp of at least the basics of the neural network so we can use an already implemented version of it, if we are to resubmit.
+We hope this implementation shows we have a grasp of at least the basics of the neural network so we can use an already implemented version of it, which hopefully can save us from using the extra time on the resubmission.
 
 \subsubsection{Feed-Forward}
 We implemented the feed-forward in layers, with each layer containing $N$ neurons $n_i$ and $N \cdot M$ weights $w_{ij}$, where $M$ is the number of the following layers neurons.\\
@@ -64,7 +64,7 @@ This calculation is done through the network, and it seams to work.
 
 \subsubsection{Error calculation}
 The error calculations are done using the formular, where $K$ is the outputs:
-\begin{equation}
+\begin{equation} \label{eq:badError}
     \frac{1}{2} \sum_{j = 1}^{N}\sum_{i = 1}^{K}([t_j]_i - [f(x_j;w)]_i)
 \end{equation}
 This diviates from the given formular:
@@ -72,7 +72,24 @@ This diviates from the given formular:
     \frac{1}{2} \sum_{j = 1}^{N} \sum_{i = 1}^{K}([f(x_j;w)]_i - [t_j]_i)^2
 \end{equation}
 But we were unable to get any reasonable results from this, which i belive is the fault of some implementation somewhere in the code.\\
+The calculations of the errors seams to work, as it, as expected gives a higher error when our output moves further away from the desired output.\\
 
+\subsubsection{Backpropogation}
+The backpropogation is where i belive a mistake has been made, but i am unsure if it is caused by a missunderstanding or bad implementation.\\
+Here is the calculations as we intended to implement them.\\
+Starting with the output layer, we calculate the error of each node using the formular:
+\begin{equation}
+    \delta_i = h'(a_i) \sum_{k = i + 1}^{M + K + D}w_{ij} \delta{k}
+\end{equation}
+Meaning for each neuron in the layer $i$, we find each weight connecting it to neurons in layer $k$.\\
+$h'(a_i)$ is given by (\ref{eq:deriv}).\\
+The change in weight we found by:
+\begin{equation}
+    Delta w_{ij}^{(t + 1)} = \eta \cdot \delta_i * z_j + \mu \cdot \Delta w_{ij}^{t}
+\end{equation}
+We then add the calculated delta value to the previous weight. 
+We belive it is somewhere here we have a problem as the change in 
+weight does not appear to be correct.
 
 \subsection{Results}
 
