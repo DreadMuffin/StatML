@@ -136,6 +136,12 @@ class Layer:
         else:
             return retWeights
 
+    def getLayerWeights(self):
+        retWeights = []
+        for sender, receiver, weight, _ in self.weights:
+            retWeights.append((sender, receiver, weight, receiver.getValue()))
+        return retWeights
+
     def setWeights(self, weights):
         self.weights = weights
 

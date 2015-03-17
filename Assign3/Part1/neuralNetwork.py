@@ -26,12 +26,61 @@ def meanSquareError(target, actual):
     error = (1.0/(2.0 * len(target))) * sum(difpow)
     return error
 
-def estPartials(ws, epsilon):
-    retarray = np.empty([len(ws),len(ws)])
-    for i in range(len(ws)):
-        ei = np.array([0.0] * len(ws))
+def estPartials(eT):
+    epsilon = 0.00000001
+
+    llen = len(layers) - 1
+    wlen = len(inputLayer.getWeights([]))
+
+    ws = [[] for i in range(llen)]
+
+    for i in range(llen):
+        ws[i] = layers[i].getLayerWeights()
+
+    wValues = []
+    for l in ws:
+        for w in l:
+            wValues.append(w[2])
+
+    retarray = [0.0] * wlen
+
+    for i in range(wlen):
+        ei = np.array([0.0] * wlen)
         ei[i] = 1.0
-        retarray[i,:] = ((ws + epsilon * ei) - ws) / epsilon
+
+        print wValues
+        print epsilon
+        print ei
+
+        Eeps = wValues + epsilon * ei
+
+        altWeights = [[] for r in range(llen)]
+
+        a = 0
+
+        print ws
+        for l in range(llen):
+            for w in ws[l]:
+                altWeights[l].append((w[0],w[1],Eeps[a],0))
+                a += 1
+
+        for l in range(len(ws)):
+            print inputLayer.getWeights([])[l][2]
+
+        for k in range(len(test)):
+            (input, targetOut) = test[k]
+            inputLayer.setWeights(altWeights)
+            inputLayer.calculate()
+            output = outputLayer.getNeurons()[0].getValue()
+
+            tmptarget = targetOut
+            tmpresult = output
+
+        altMSE = meanSquareError([tmptarget], [tmpresult])
+        retarray[i] = (altMSE - eT)
+
+
+
     return retarray
 
 
@@ -140,12 +189,6 @@ for i in range(len(training)):
     errorsT.append(abs(errorT))
     outputLayer.backpropogate([errorT])
 
-    ws = []
-    for w in inputLayer.getWeights([]):
-        ws.append(w[2])
-
-    #print estPartials(np.array([ws]),0.1)
-
     results = []
     targets = []
 
@@ -162,6 +205,8 @@ for i in range(len(training)):
     errorTest = meanSquareError(targets, results)
     errorsTest.append(abs(errorTest))
 
+
+print estPartials(errorTest)
 
 plt.plot(np.array(errorsT), "b-", label = "Training set")
 plt.plot(np.array(errorsTest), "r-", label = "Test set")
