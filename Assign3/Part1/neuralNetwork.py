@@ -158,7 +158,7 @@ momentum = 0.10000
 
 test = []
 training = []
-for x in np.arange(-20,20, 00.1):
+for x in np.arange(-20,20, 0.1):
     y = sinc(x)
     test.append((x,y))
     training.append((x,y))
