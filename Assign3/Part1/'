@@ -28,11 +28,13 @@ def meanSquareError(target, actual):
     return error
 
 def estPartials(ws, epsilon):
-    retarray = np.empty([len(ws),len(ws)])
+    retarray = [0.0] * len(ws)
     for i in range(len(ws)):
-        ei = np.array([0.0] * len(ws))
+        ei = [0.0] * len(ws)
         ei[i] = 1.0
-        retarray[i,:] = ((ws + epsilon * ei) - ws) / epsilon
+        print ws
+        print epsilon * np.array(ei)
+        retarray[i] = ((ws + epsilon * np.array(ei)) - ws) / epsilon
     return retarray
 
 
@@ -143,7 +145,7 @@ for _ in range(loops):
     for w in inputLayer.getWeights([]):
         ws.append(w[2])
 
-    print estPartials(np.array([ws]),0.1)
+    print estPartials(ws,0.1)
     break
 
 
