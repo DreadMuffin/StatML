@@ -37,6 +37,12 @@ def estPartials(eT):
     for i in range(llen):
         ws[i] = layers[i].getLayerWeights()
 
+    wslens = []
+
+    for w in ws:
+        wslens.append(len(w))
+
+
     wValues = []
     for l in ws:
         for w in l:
@@ -48,11 +54,9 @@ def estPartials(eT):
         ei = np.array([0.0] * wlen)
         ei[i] = 1.0
 
-        print wValues
-        print epsilon
-        print ei
 
         Eeps = wValues + epsilon * ei
+
 
         altWeights = [[] for r in range(llen)]
 
@@ -60,20 +64,14 @@ def estPartials(eT):
 
         for l in range(llen):
             for w in ws[l]:
-                altWeights[l].append((w[0],w[1],Eeps[a],0))
+                altWeights[l].append((w[0],w[1],Eeps[a],0.0))
                 a += 1
 
         for k in range(len(test)):
             (input, targetOut) = test[k]
-            print inputLayer.getWeights([])
             for l in range(llen):
-                layers[l].setWeights(altWeights[l])
-                #for w in altWeights[l]:
-                #    print w
-                #    layers[l].setWeights(w)
 
-            print len(inputLayer.getWeights([]))
-            print inputLayer.getWeights([])
+                layers[l].setWeights(altWeights[l])
             inputLayer.calculate()
             output = outputLayer.getNeurons()[0].getValue()
 
@@ -81,7 +79,7 @@ def estPartials(eT):
             tmpresult = output
 
         altMSE = meanSquareError([tmptarget], [tmpresult])
-        retarray[i] = (altMSE - eT)
+        retarray[i] = (altMSE - eT) / epsilon
 
     return retarray
 
@@ -163,8 +161,8 @@ for x in np.arange(-20,20, 0.1):
     test.append((x,y))
     training.append((x,y))
 
-# training = fromFile("sincTrain25.dt")
-# test = fromFile("sincValidate10.dt")
+training = fromFile("sincTrain25.dt")
+test = fromFile("sincValidate10.dt")
 # plt.plot(x,sinc(x))
 # plt.show()
 
@@ -178,7 +176,7 @@ errorsTest = []
 plotsOutTarget = []
 plotsOutActual = []
 
-print "Starting Loop"
+#print "Starting Loop"
 for j in range(loops):
 
     results = []
@@ -201,13 +199,13 @@ for j in range(loops):
         # results = []
         # targets = []
 
-    if (j % 250) == 0:
-        print "Run: " + str(j)
+#    if (j % 250) == 0:
+#        print "Run: " + str(j)
 
-    print "I: " + str(input)
-    print "O: " + str(output)
-    print "T: " + str(targetOut)
-    print "E: " + str(errorT)
+#    print "I: " + str(input)
+#    print "O: " + str(output)
+#    print "T: " + str(targetOut)
+#    print "E: " + str(errorT)
 
 results = []
 targets = []
@@ -216,7 +214,7 @@ plotIn = []
 # Test
 for i in range(len(test)):
     (input, targetOut) = test[i]
-    inputLayer.getNeurons()[1].setValue(input) 
+    inputLayer.getNeurons()[1].setValue(input)
     inputLayer.calculate()
     output = outputLayer.getNeurons()[0].getValue()
 
@@ -227,16 +225,18 @@ for i in range(len(test)):
     errorTest = meanSquareError(targets, results)
     errorsTest.append(abs(errorTest))
 
-plt.plot(np.array(plotIn), np.array(results), "r-", label = "Calculated")
-plt.plot(np.array(plotIn), np.array(targets), "b-", label = "Target")
-plt.legend()
-plt.show()
+print estPartials(errorTest)
+
+#plt.plot(np.array(plotIn), np.array(results), "r-", label = "Calculated")
+#plt.plot(np.array(plotIn), np.array(targets), "b-", label = "Target")
+#plt.legend()
+#plt.show()
 
 # print estPartials(errorTest)
 
-plt.plot(np.array(errorsT), "b-", label = "Training set")
-plt.plot(np.array(errorsTest), "r-", label = "Test set")
-plt.legend()
-plt.xlabel("Number of runs")
-plt.ylabel("Bached Mean Square Error")
-plt.show()
+#plt.plot(np.array(errorsT), "b-", label = "Training set")
+#plt.plot(np.array(errorsTest), "r-", label = "Test set")
+#plt.legend()
+#plt.xlabel("Number of runs")
+#plt.ylabel("Bached Mean Square Error")
+#plt.show()
