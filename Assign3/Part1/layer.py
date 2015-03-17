@@ -45,7 +45,7 @@ class Layer:
         for sender in self.neurons:
             for reciever in layer.getNeurons():
                 if not reciever.isBias:
-                    # self.weights.append((sender, reciever, random.uniform(0,1), 0))
+    # self.weights.append((sender, reciever, random.uniform(0,1), 0))
                     self.weights.append((sender, reciever, 1, 0))
                     sender.addSendTo(reciever)
                     reciever.addRecieveFrom(sender)
@@ -121,7 +121,6 @@ class Layer:
             for (sender, reciever, weigh, _) in self.weights:
                 reciever.recieveWeigh(sender, weigh)
             self.nextLayer.calculate()
-
 
 # Debugging 
 

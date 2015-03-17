@@ -21,7 +21,7 @@ def addConnection(a,b):
     a.sendToLayer(b)
 
 def meanSquareError(target, actual):
-    dif = map(sub, target, actual)
+    dif = map(sub, actual, target)
     difpow = map(power, dif)
     error = (1.0/(2.0 * len(target))) * sum(dif)
     return error 
@@ -60,8 +60,10 @@ def createNetwork(learnConst, momentum):
     say("Adding nodes to layers")
     say("----------------------------------------------------------")
     layers[0].addNeuron(ne.Neuron(linear, "Inp neuron", False))
-    layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron11", False))
-    layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron12", False))
+    for i in range(2):
+        layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron" + str(i), False))
+    # layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron11", False))
+    # layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron12", False))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron21", False))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron22", False))
     # layers[2].addNeuron(ne.Neuron(nonLinear, "Hid neuron23", False))
@@ -86,29 +88,43 @@ def broadcast(value, inputNeuron, outputNeuron):
     inputNeuron.broadcast(value)
     return outputNeuron.getValue() 
 
-# def normalize(dif, input, output)
+def sinc(x):
+   return np.sinc(x) 
 
 # debugging
 layers = []
 
 # Network constants
-learnConst = 0.050000
-momentum = 0.05000
+learnConst = 2.0000
+momentum = 1.00000
 
 # print "Training!"
 
 
-training = fromFile("sincTrain25.dt")
-test = fromFile("sincValidate10.dt")
+test = []
+training = []
+for x in np.arange(-20,20, 00.1):
+    y = sinc(x)
+    test.append((x,y))
+    training.append((x,y))
+
+# training = fromFile("sincTrain25.dt")
+# test = fromFile("sincValidate10.dt")
+# plt.plot(x,sinc(x))
+# plt.show()
 
 # Loop
-loops = 4000
+loops = 100
 networkTalk = False
 # networkTalk = True
 inputLayer, outputLayer= createNetwork(learnConst, momentum)
 errorsT = []
 errorsTest = []
-for i in range(loops):
+plotsOutTarget = []
+plotsOutActual = []
+
+print "Starting Loop"
+for j in range(loops):
 
     results = []
     targets = []
@@ -128,22 +144,41 @@ for i in range(loops):
     errorsT.append(abs(errorT))
     outputLayer.backpropogate([errorT])
 
+    print "I: " + str(input)
+    print "O: " + str(output)
+    print "T: " + str(targetOut)
+    print "E: " + str(errorT)
+
     results = []
     targets = []
 
-    # Test
-    for i in range(len(test)):
-        (input, targetOut) = test[i]
-        inputLayer.getNeurons()[1].setValue(input) 
-        inputLayer.calculate()
-        output = outputLayer.getNeurons()[0].getValue()
+    if (j % 250) == 0:
+        print "Run: " + str(j)
 
-        targets.append(targetOut)
-        results.append(output)
+results = []
+targets = []
+plotIn = []
 
-    errorTest = meanSquareError(targets, results)
-    errorsTest.append(abs(errorTest))
+# Test
+for i in range(len(test)):
+    (input, targetOut) = test[i]
+    inputLayer.getNeurons()[1].setValue(input) 
+    inputLayer.calculate()
+    output = outputLayer.getNeurons()[0].getValue()
 
+    targets.append(targetOut)
+    results.append(output)
+
+    plotIn.append(input)
+
+print inputLayer.getWeights([])
+errorTest = meanSquareError(targets, results)
+errorsTest.append(abs(errorTest))
+
+plt.plot(np.array(plotIn), np.array(results), "r-", label = "Calculated")
+plt.plot(np.array(plotIn), np.array(targets), "b-", label = "Target")
+plt.legend()
+plt.show()
 
 plt.plot(np.array(errorsT), "b-", label = "Training set")
 plt.plot(np.array(errorsTest), "r-", label = "Test set")
