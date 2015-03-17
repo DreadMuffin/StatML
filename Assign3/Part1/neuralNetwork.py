@@ -58,18 +58,22 @@ def estPartials(eT):
 
         a = 0
 
-        print ws
         for l in range(llen):
             for w in ws[l]:
                 altWeights[l].append((w[0],w[1],Eeps[a],0))
                 a += 1
 
-        for l in range(len(ws)):
-            print inputLayer.getWeights([])[l][2]
-
         for k in range(len(test)):
             (input, targetOut) = test[k]
-            inputLayer.setWeights(altWeights)
+            print inputLayer.getWeights([])
+            for l in range(llen):
+                layers[l].setWeights(altWeights[l])
+                #for w in altWeights[l]:
+                #    print w
+                #    layers[l].setWeights(w)
+
+            print len(inputLayer.getWeights([]))
+            print inputLayer.getWeights([])
             inputLayer.calculate()
             output = outputLayer.getNeurons()[0].getValue()
 
@@ -78,8 +82,6 @@ def estPartials(eT):
 
         altMSE = meanSquareError([tmptarget], [tmpresult])
         retarray[i] = (altMSE - eT)
-
-
 
     return retarray
 
