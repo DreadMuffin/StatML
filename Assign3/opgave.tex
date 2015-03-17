@@ -44,8 +44,26 @@ Students: & Lasse Ahlbech Madsen \\
 
 \section{III.1}
 
+\subsection{Deriviation of the derivative of the transfer function}
 \input{Part1/proof.tex}
+\subsection{}
 
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \includegraphics[width=1.0\textwidth]{Part1/20Nodes.png}
+        \caption{20 Nodes}
+        \label{fig:2scatter}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\textwidth}
+        \includegraphics[width=1.0\textwidth]{Part1/2Nodes.png}
+        \caption{2 Nodes} 
+        \label{fig:2scatter}
+    \end{subfigure}
+    \caption{Error calculation as a function of runs with learning and momentum constants set to 0.05}
+    \label{}
+\end{figure}
 
 \section{III.2}
 
@@ -90,7 +108,7 @@ traindata attribute and the transformed testdata attributes. The
 testdata obviously does not have zero mean and unit variance as it is
 transformed with the mean and standard deviation of the traindata.
 
-\begin{verbatim}
+\begin{minted}{matlab}
 >> mean(traindata)
 
 ans =
@@ -140,7 +158,7 @@ ans =
   Columns 13 through 22
 
     2.1905    1.7176    2.6633    1.3610    1.0827    0.9514    1.2166    1.3629    1.1336    1.4149
-\end{verbatim}
+\end{minted}
 
 \subsection{III.2.2}
 

@@ -120,7 +120,7 @@ def createNetwork(learnConst, momentum):
     say("Adding nodes to layers")
     say("----------------------------------------------------------")
     layers[0].addNeuron(ne.Neuron(linear, "Inp neuron", False))
-    for i in range(2):
+    for i in range(20):
         layers[1].addNeuron(ne.Neuron(nonLinear, "Hid neuron" + str(i), False))
     layers[2].addNeuron(ne.Neuron(linear, "Out neuron", False))
     say("----------------------------------------------------------")
@@ -147,14 +147,6 @@ def sinc(x):
    return np.sinc(x) 
 
 # debugging
-layers = []
-
-# Network constants
-learnConst = 0.1000
-momentum = 0.10000
-
-# print "Training!"
-
 
 test = []
 training = []
@@ -169,74 +161,78 @@ for x in np.arange(-20,20, 0.1):
 # plt.show()
 
 # Loop
-loops = 100
+loops = 10
 networkTalk = False
 # networkTalk = True
-inputLayer, outputLayer= createNetwork(learnConst, momentum)
-errorsT = []
-errorsTest = []
-plotsOutTarget = []
-plotsOutActual = []
 
-print "Starting Loop"
-for j in range(loops):
+for learnConst, momentum, colour in [(0.5,0.5, "r"),(0.0001,0.0, "b"),(1,1, "g")]:
+    # Network constants
+    # learnConst = 0.1
+    # momentum = 0.1
+    layers = []
+    inputLayer, outputLayer= createNetwork(learnConst, momentum)
+    errorsT = []
+    errorsTest = []
+    plotsOutTarget = []
+    plotsOutActual = []
+
+    print "Starting Loop"
+    for j in range(loops):
+
+        results = []
+        targets = []
+
+        # Training
+        for i in range(len(training)):
+            (input, targetOut) = training[i]
+            inputLayer.getNeurons()[1].setValue(input)
+            inputLayer.calculate()
+            output = outputLayer.getNeurons()[0].getValue()
+
+            targets.append(targetOut)
+            results.append(output)
+
+            errorT = meanSquareError(targets, results)
+            errorsT.append(abs(errorT))
+            outputLayer.backpropogate([errorT])
+
+        if (j % 250) == 0:
+            print "Run: " + str(j)
+
+        # print "I: " + str(input)
+        # print "O: " + str(output)
+        # print "T: " + str(targetOut)
+        # print "E: " + str(errorT)
 
     results = []
     targets = []
+    plotIn = []
 
-    # Training
-    for i in range(len(training)):
-        (input, targetOut) = training[i]
-        inputLayer.getNeurons()[1].setValue(input)
+    # Test
+    for i in range(len(test)):
+        (input, targetOut) = test[i]
+        inputLayer.getNeurons()[1].setValue(input) 
         inputLayer.calculate()
         output = outputLayer.getNeurons()[0].getValue()
 
         targets.append(targetOut)
         results.append(output)
+        plotIn.append(input)
 
-        errorT = meanSquareError(targets, results)
-        errorsT.append(abs(errorT))
-        outputLayer.backpropogate([errorT])
+        errorTest = meanSquareError(targets, results)
+        errorsTest.append(abs(errorTest))
 
-        # results = []
-        # targets = []
+    plt.plot(np.array(plotIn), np.array(results), colour + "-", label = "N2: (Learn, moment) = (" + str(learnConst) + ", " + str(momentum) + ")")
 
-    if (j % 250) == 0:
-        print "Run: " + str(j)
-
-    print "I: " + str(input)
-    print "O: " + str(output)
-    print "T: " + str(targetOut)
-    print "E: " + str(errorT)
-
-results = []
-targets = []
-plotIn = []
-
-# Test
-for i in range(len(test)):
-    (input, targetOut) = test[i]
-    inputLayer.getNeurons()[1].setValue(input) 
-    inputLayer.calculate()
-    output = outputLayer.getNeurons()[0].getValue()
-
-    targets.append(targetOut)
-    results.append(output)
-    plotIn.append(input)
-
-    errorTest = meanSquareError(targets, results)
-    errorsTest.append(abs(errorTest))
-
-plt.plot(np.array(plotIn), np.array(results), "r-", label = "Calculated")
-plt.plot(np.array(plotIn), np.array(targets), "b-", label = "Target")
+plt.plot(np.array(plotIn), np.array(targets), label = "Target")
 plt.legend()
 plt.show()
 
 # print estPartials(errorTest)
 
-plt.plot(np.array(errorsT), "b-", label = "Training set")
-plt.plot(np.array(errorsTest), "r-", label = "Test set")
-plt.legend()
-plt.xlabel("Number of runs")
-plt.ylabel("Bached Mean Square Error")
-plt.show()
+# plt.plot(np.array(errorsT), "b-", label = "Training set")
+# plt.plot(np.array(errorsTest), "r-", label = "Test set")
+# plt.legend()
+# plt.xlabel("Number of runs")
+# plt.ylabel("Bached Mean Square Error")
+# plt.show()
