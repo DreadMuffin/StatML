@@ -21,9 +21,9 @@ def addConnection(a,b):
     a.sendToLayer(b)
 
 def meanSquareError(target, actual):
-    dif = map(sub, actual, target)
-    difpow = map(power, dif)
-    error = (1.0/(2.0 * len(target))) * sum(difpow)
+    dif = map(sub, target, actual)
+    # difpow = map(power, dif)
+    error = (1.0/(2.0 * len(target))) * sum(dif)
     return error
 
 def estPartials(eT):
@@ -148,8 +148,8 @@ def sinc(x):
 layers = []
 
 # Network constants
-learnConst = 2.0000
-momentum = 1.00000
+learnConst = 0.1000
+momentum = 0.10000
 
 # print "Training!"
 
@@ -182,31 +182,30 @@ for j in range(loops):
     results = []
     targets = []
 
-# Training
-for i in range(len(training)):
+    # Training
+    for i in range(len(training)):
+        (input, targetOut) = training[i]
+        inputLayer.getNeurons()[1].setValue(input)
+        inputLayer.calculate()
+        output = outputLayer.getNeurons()[0].getValue()
 
-    (input, targetOut) = training[i]
-    inputLayer.getNeurons()[1].setValue(input)
-    inputLayer.calculate()
-    output = outputLayer.getNeurons()[0].getValue()
+        targets.append(targetOut)
+        results.append(output)
 
-    targets.append(targetOut)
-    results.append(output)
+        errorT = meanSquareError(targets, results)
+        errorsT.append(abs(errorT))
+        outputLayer.backpropogate([errorT])
 
-    errorT = meanSquareError(targets, results)
-    errorsT.append(abs(errorT))
-    outputLayer.backpropogate([errorT])
+        # results = []
+        # targets = []
+
+    if (j % 250) == 0:
+        print "Run: " + str(j)
 
     print "I: " + str(input)
     print "O: " + str(output)
     print "T: " + str(targetOut)
     print "E: " + str(errorT)
-
-    results = []
-    targets = []
-
-    if (j % 250) == 0:
-        print "Run: " + str(j)
 
 results = []
 targets = []
@@ -221,19 +220,17 @@ for i in range(len(test)):
 
     targets.append(targetOut)
     results.append(output)
-
     plotIn.append(input)
 
-print inputLayer.getWeights([])
-errorTest = meanSquareError(targets, results)
-errorsTest.append(abs(errorTest))
+    errorTest = meanSquareError(targets, results)
+    errorsTest.append(abs(errorTest))
 
 plt.plot(np.array(plotIn), np.array(results), "r-", label = "Calculated")
 plt.plot(np.array(plotIn), np.array(targets), "b-", label = "Target")
 plt.legend()
 plt.show()
 
-print estPartials(errorTest)
+# print estPartials(errorTest)
 
 plt.plot(np.array(errorsT), "b-", label = "Training set")
 plt.plot(np.array(errorsTest), "r-", label = "Test set")
